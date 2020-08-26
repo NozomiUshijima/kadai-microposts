@@ -54,12 +54,10 @@ class User extends Authenticatable
         return $this->belongsToMany(User::class, 'user_follow', 'follow_id', 'user_id')->withTimestamps();
     }
     
-    
-    public function loadRelationshipCounts()
+     public function loadRelationshipCounts()
     {
-        $this->loadCount('microposts');
+        $this->loadCount(['microposts', 'followings', 'followers']);
     }
-    
     
     public function follow($userId)
     {
@@ -103,9 +101,12 @@ class User extends Authenticatable
         return $this->followings()->where('follow_id', $userId)->exists();
     }
     
-    
-    public function loadRelationshipCounts()
+    public function feed_microposts()
     {
-        $this->loadCount(['microposts', 'followings', 'followers']);
+        $userIds = $this->followings()->pluck('users.id')->toArray();
+        
+        $userIds[] = $this->id;
+        
+        return Micropost::whereIn('user_id', $userIds);
     }
 }
